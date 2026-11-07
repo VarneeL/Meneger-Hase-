@@ -41,14 +41,25 @@ body {
   padding: 2.5rem 1.5rem;
 }
 
+.login-container {
+  max-width: 440px;
+}
+
 /* Header */
 .app-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1.25rem;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--card-border);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
 }
 
 .logo-badge {
@@ -76,6 +87,25 @@ body {
   margin-top: 0.2rem;
 }
 
+.logout-btn {
+  background-color: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.logout-btn:hover {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.4);
+  background-color: var(--danger-bg);
+}
+
 /* Main Content */
 .main-content {
   display: flex;
@@ -97,6 +127,34 @@ body {
   font-weight: 600;
   margin-bottom: 1.25rem;
   color: var(--text-main);
+}
+
+/* Komunikaty błędów i podpowiedzi */
+.error-banner {
+  background-color: var(--danger-bg);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.login-hint {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.login-hint code {
+  color: #818cf8;
+  background-color: var(--primary-light);
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
 }
 
 /* Form */

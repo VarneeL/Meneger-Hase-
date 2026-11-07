@@ -10,56 +10,65 @@ interface HasloWpis {
   data: string     // Data dodania wpisu sformatowana po polsku
 }
 
-// Klucz, pod którym dane będą zapisywane w pamięci przeglądarki (localStorage)
+// Klucz, pod którym dane haseł są zapisywane w pamięci przeglądarki (localStorage)
 const STORAGE_KEY = 'zapisane_hasla'
 
+// Domyślne dane dostępowe do logowania w aplikacji
+const DOMYSLNY_LOGIN = 'admin'
+const DOMYSLNE_HASLO = 'admin123'
+
 export default function App() {
-  // Stan przechowujący listę wszystkich haseł.
-  // Funkcja początkowa wczytuje zapisane dane z localStorage przy starcie aplikacji.
+  // Stan logowania: sprawdza, czy użytkownik jest już zalogowany w bieżącej sesji przeglądarki
+  const [czyZalogowany, setCzyZalogowany] = useState<boolean>(() => {
+    return sessionStorage.getItem('czyZalogowany') === 'true'
+  })
+
+  // Stany formularza logowania
+  const [loginAuth, setLoginAuth] = useState('')
+  const [hasloAuth, setHasloAuth] = useState('')
+  const [bladLogowania, setBladLogowania] = useState('')
+
+  // Stan przechowujący listę wszystkich haseł (wczytywana z localStorage)
   const [hasla, setHasla] = useState<HasloWpis[]>(() => {
     try {
       const zapisane = localStorage.getItem(STORAGE_KEY)
       if (zapisane) {
         const wczytane = JSON.parse(zapisane)
-        // Odrzucamy ewentualne stare wpisy demonstracyjne
         return wczytane.filter((item: HasloWpis) => item.id !== '1' && item.id !== '2')
       }
     } catch (e) {
       console.error('Błąd podczas wczytywania danych z localStorage:', e)
     }
-    // Jeśli nic nie ma w localStorage, zaczynamy od pustej listy
     return []
   })
 
-  // Stany przechowujące wartości wpisane w polach formularza
+  // Stany formularza dodawania nowego hasła
   const [strona, setStrona] = useState('')
   const [login, setLogin] = useState('')
   const [haslo, setHaslo] = useState('')
 
-  // Stan określający, czy hasło w formularzu dodawania ma być widoczne (typ 'text' czy 'password')
+  // Stan określający, czy hasło w formularzu dodawania ma być widoczne
   const [pokazHasloForm, setPokazHasloForm] = useState(false)
 
-  // Stan przechowujący tekst wpisany w wyszukiwarkę
+  // Stan przechowujący tekst wpisany w wyszukiwarkę haseł
   const [szukaj, setSzukaj] = useState('')
 
-  // Obiekt przechowujący widoczność poszczególnych haseł na liście (klucz: id wpisu, wartość: boolean)
+  // Obiekt przechowujący widoczność poszczególnych haseł na liście (id -> boolean)
   const [odkryte, setOdkryte] = useState<Record<string, boolean>>({})
 
-  // Identyfikator elementu, który został niedawno skopiowany (używany do wyświetlenia "✓ Skopiowano")
+  // Identyfikator elementu, który został niedawno skopiowany (dla efektu "✓ Skopiowano")
   const [skopiowanoKlucz, setSkopiowanoKlucz] = useState<string | null>(null)
 
-  // Hook useEffect: automatycznie zapisuje aktualną listę haseł do localStorage przy każdej jej modyfikacji
+  // Zapisywanie haseł do localStorage przy każdej zmianie listy
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(hasla))
   }, [hasla])
 
-  // useMemo: optymalizacja filtrowania – przelicza listę tylko, gdy zmieni się lista haseł lub tekst wyszukiwania
+  // useMemo: filtrowanie listy haseł w czasie rzeczywistym
   const listaHasel = useMemo(() => {
     return hasla.filter((item) => {
-      // Jeśli wyszukiwarka jest pusta, zwracamy wszystkie elementy
       if (szukaj.trim() === '') return true
       const query = szukaj.toLowerCase()
-      // Sprawdzamy, czy nazwa strony lub login zawiera wpisaną frazę
       return (
         item.strona.toLowerCase().includes(query) ||
         item.login.toLowerCase().includes(query)
@@ -67,93 +76,185 @@ export default function App() {
     })
   }, [hasla, szukaj])
 
-  // Funkcja obsługująca zatwierdzenie formularza (dodanie nowego konta)
-  const handleDodaj = (event: React.FormEvent) => {
-    event.preventDefault() // Zapobiega przeładowaniu strony po wysłaniu formularza
+  // Funkcja obsługująca formularz logowania
+  const handleLogowanie = (event: React.FormEvent) => {
+    event.preventDefault()
 
-    // Walidacja: upewniamy się, że użytkownik uzupełnił wszystkie 3 pola
+    // Sprawdzenie poprawności wpisanego loginu i hasła
+    if (loginAuth === DOMYSLNY_LOGIN && hasloAuth === DOMYSLNE_HASLO) {
+      setCzyZalogowany(true)
+      sessionStorage.setItem('czyZalogowany', 'true') // Zapamiętanie zalogowania na czas otwartej karty
+      setBladLogowania('')
+      setLoginAuth('')
+      setHasloAuth('')
+    } else {
+      setBladLogowania('Nieprawidłowy login lub hasło!')
+    }
+  }
+
+  // Funkcja wylogowująca użytkownika
+  const handleWyloguj = () => {
+    setCzyZalogowany(false)
+    sessionStorage.removeItem('czyZalogowany')
+  }
+
+  // Funkcja obsługująca dodanie nowego hasła do bazy
+  const handleDodaj = (event: React.FormEvent) => {
+    event.preventDefault()
+
+    // Walidacja wypełnienia pól
     if (!strona.trim() || !login.trim() || !haslo.trim()) {
       alert('Uzupełnij wszystkie pola!')
       return
     }
 
-    // Tworzenie nowego obiektu wpisu
     const nowyWpis: HasloWpis = {
-      id: Date.now().toString(), // Unikalny identyfikator na podstawie bieżącego czasu
+      id: Date.now().toString(),
       strona: strona.trim(),
       login: login.trim(),
       haslo: haslo.trim(),
-      data: new Date().toLocaleDateString('pl-PL') // Dzisiejsza data w formacie DD.MM.RRRR
+      data: new Date().toLocaleDateString('pl-PL')
     }
 
-    // Dodanie nowego hasła na początek tablicy
     setHasla([nowyWpis, ...hasla])
-
-    // Wyczyszczenie pól formularza po pomyślnym dodaniu
     setStrona('')
     setLogin('')
     setHaslo('')
     setPokazHasloForm(false)
   }
 
-  // Funkcja usuwająca wybrane hasło z listy
+  // Funkcja usuwająca hasło z potwierdzeniem
   const handleUsun = (id: string) => {
-    // Prośba o potwierdzenie przez użytkownika, aby zapobiec przypadkowemu usunięciu
     if (confirm('Czy na pewno chcesz usunąć to hasło?')) {
-      // Filtrujemy tablicę, pozostawiając tylko elementy o innym id niż usuwany
       setHasla(hasla.filter((item) => item.id !== id))
     }
   }
 
-  // Funkcja kopiująca podany tekst (login lub hasło) do schowka systemowego
+  // Funkcja kopiująca login lub hasło do schowka
   const handleKopiuj = (tekst: string, klucz: string) => {
-    navigator.clipboard.writeText(tekst) // Zapisanie tekstu do schowka
-    setSkopiowanoKlucz(klucz)            // Ustawienie informacji o skopiowaniu danego pola
-
-    // Po 2 sekundach przywracamy domyślny napis na przycisku
+    navigator.clipboard.writeText(tekst)
+    setSkopiowanoKlucz(klucz)
     setTimeout(() => {
       setSkopiowanoKlucz((prev) => (prev === klucz ? null : prev))
     }, 2000)
   }
 
-  // Funkcja przełączająca widoczność hasła na liście (odsłoń / ukryj kropkami)
+  // Funkcja przełączająca widoczność hasła (kropki / tekst jawny)
   const handlePrzelaczWidocznosc = (id: string) => {
     setOdkryte((prev) => ({
       ...prev,
-      [id]: !prev[id] // Odwraca wartość logiczną (true -> false lub false -> true)
+      [id]: !prev[id]
     }))
   }
 
-  // Funkcja generująca bezpieczne, losowe 14-znakowe hasło
+  // Funkcja generująca losowe, bezpieczne hasło
   const handleGeneruj = () => {
     const znaki = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
     let wynik = ''
     for (let i = 0; i < 14; i++) {
       wynik += znaki.charAt(Math.floor(Math.random() * znaki.length))
     }
-    // Wstawienie wygenerowanego hasła do pola formularza i jego natychmiastowe pokazanie
     setHaslo(wynik)
     setPokazHasloForm(true)
   }
 
+  // -------------------------------------------------------------
+  // EKRAN LOGOWANIA (jeśli użytkownik nie jest jeszcze zalogowany)
+  // -------------------------------------------------------------
+  if (!czyZalogowany) {
+    return (
+      <div className="app-container login-container">
+        <header className="app-header">
+          <div className="header-brand">
+            <div className="logo-badge">🔐</div>
+            <div>
+              <h1>Menedżer Haseł</h1>
+              <p className="subtitle">Wprowadź dane, aby odblokować dostęp</p>
+            </div>
+          </div>
+        </header>
+
+        <section className="card">
+          <h2 className="card-title">Zaloguj się</h2>
+
+          {/* Komunikat o błędnych danych */}
+          {bladLogowania && (
+            <div className="error-banner">
+              ⚠️ {bladLogowania}
+            </div>
+          )}
+
+          <form onSubmit={handleLogowanie} className="form-grid">
+            <div className="input-group">
+              <label htmlFor="authLogin">Login</label>
+              <input
+                id="authLogin"
+                type="text"
+                placeholder="Wpisz login"
+                value={loginAuth}
+                onChange={(e) => setLoginAuth(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="authHaslo">Hasło</label>
+              <input
+                id="authHaslo"
+                type="password"
+                placeholder="Wpisz hasło"
+                value={hasloAuth}
+                onChange={(e) => setHasloAuth(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="primary-btn">
+              🔓 Zaloguj się
+            </button>
+          </form>
+
+          {/* Pomocnicza wskazówka z danymi domyślnymi */}
+          <div className="login-hint">
+            Domyślny login: <code>admin</code> | Hasło: <code>admin123</code>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  // -------------------------------------------------------------
+  // GŁÓWNY EKRAN APLIKACJI (widoczny po poprawnym zalogowaniu)
+  // -------------------------------------------------------------
   return (
     <div className="app-container">
-      {/* Sekcja nagłówka aplikacji */}
+      {/* Nagłówek aplikacji z przyciskiem wylogowania */}
       <header className="app-header">
-        <div className="logo-badge">🔐</div>
-        <div>
-          <h1>Menedżer Haseł</h1>
-          <p className="subtitle">Bezpiecznie przechowuj dane logowania w przeglądarce</p>
+        <div className="header-brand">
+          <div className="logo-badge">🔐</div>
+          <div>
+            <h1>Menedżer Haseł</h1>
+            <p className="subtitle">Bezpiecznie przechowuj dane logowania w przeglądarce</p>
+          </div>
         </div>
+
+        {/* Przycisk wylogowania */}
+        <button
+          type="button"
+          onClick={handleWyloguj}
+          className="logout-btn"
+          title="Zakończ sesję"
+        >
+          🚪 Wyloguj
+        </button>
       </header>
 
       <div className="main-content">
-        {/* Karta z formularzem dodawania nowego hasła */}
+        {/* Formularz dodawania nowego hasła */}
         <section className="card">
           <h2 className="card-title">Dodaj nowe konto</h2>
 
           <form onSubmit={handleDodaj} className="form-grid">
-            {/* Pole: Strona / Serwis */}
             <div className="input-group">
               <label htmlFor="strona">Strona / Serwis</label>
               <input
@@ -166,7 +267,6 @@ export default function App() {
               />
             </div>
 
-            {/* Pole: Login / E-mail */}
             <div className="input-group">
               <label htmlFor="login">Login / E-mail</label>
               <input
@@ -179,7 +279,6 @@ export default function App() {
               />
             </div>
 
-            {/* Pole: Hasło wraz z przyciskiem generatora oraz przełącznikiem podglądu */}
             <div className="input-group">
               <div className="label-with-action">
                 <label htmlFor="haslo">Hasło</label>
@@ -212,23 +311,21 @@ export default function App() {
               </div>
             </div>
 
-            {/* Przycisk wysyłający formularz */}
             <button type="submit" className="primary-btn">
               💾 Zapisz hasło
             </button>
           </form>
         </section>
 
-        {/* Karta z listą zapisanych kont */}
+        {/* Lista zapisanych haseł */}
         <section className="card">
           <div className="list-header">
-            {/* Tytuł listy z licznikiem kont */}
             <div className="list-title-wrap">
               <h2>Zapisane konta</h2>
               <span className="count-badge">{listaHasel.length}</span>
             </div>
 
-            {/* Pole wyszukiwarki filtrujące wpisy w czasie rzeczywistym */}
+            {/* Wyszukiwarka haseł */}
             <div className="search-wrapper">
               <input
                 type="text"
@@ -237,7 +334,6 @@ export default function App() {
                 value={szukaj}
                 onChange={(e) => setSzukaj(e.target.value)}
               />
-              {/* Przycisk czyszczenia wyszukiwarki (widoczny tylko, gdy wpisano tekst) */}
               {szukaj && (
                 <button
                   type="button"
@@ -250,7 +346,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Renderowanie warunkowe: gdy brak haseł wyświetlamy komunikat, w przeciwnym razie listę kart */}
           {listaHasel.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📂</div>
@@ -263,18 +358,15 @@ export default function App() {
             </div>
           ) : (
             <div className="items-list">
-              {/* Iteracja po przefiltrowanej liście haseł */}
               {listaHasel.map((item) => {
                 const czyOdkryte = !!odkryte[item.id]
                 const skopiowanyLogin = skopiowanoKlucz === `login_${item.id}`
                 const skopiowaneHaslo = skopiowanoKlucz === `haslo_${item.id}`
-                // Pobranie pierwszej litery nazwy domeny do avatara (np. 'G' dla 'google.com')
                 const inicjal =
                   item.strona.replace(/^(https?:\/\/)?(www\.)?/, '').charAt(0).toUpperCase() || '?'
 
                 return (
                   <div key={`haslo_${item.id}`} className="password-card">
-                    {/* Górna część karty: logo/inicjał, nazwa serwisu, data oraz przycisk usuwania */}
                     <div className="card-top">
                       <div className="site-badge">
                         <span className="avatar-circle">{inicjal}</span>
@@ -284,7 +376,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Przycisk usuwania wybranego hasła */}
                       <button
                         type="button"
                         onClick={() => handleUsun(item.id)}
@@ -295,9 +386,7 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Szczegóły konta: login oraz hasło z przyciskami akcji */}
                     <div className="entry-details">
-                      {/* Wiersz loginu */}
                       <div className="detail-row">
                         <span className="detail-label">Login:</span>
                         <span className="detail-value">{item.login}</span>
@@ -310,14 +399,12 @@ export default function App() {
                         </button>
                       </div>
 
-                      {/* Wiersz hasła (zamaskowane kropkami lub jawne) */}
                       <div className="detail-row">
                         <span className="detail-label">Hasło:</span>
                         <span className="detail-value password-text">
                           {czyOdkryte ? item.haslo : '••••••••••••'}
                         </span>
                         <div className="btn-group">
-                          {/* Przycisk Pokaż / Ukryj hasło */}
                           <button
                             type="button"
                             onClick={() => handlePrzelaczWidocznosc(item.id)}
@@ -325,7 +412,6 @@ export default function App() {
                           >
                             {czyOdkryte ? 'Ukryj' : 'Pokaż'}
                           </button>
-                          {/* Przycisk Kopiuj hasło */}
                           <button
                             type="button"
                             onClick={() => handleKopiuj(item.haslo, `haslo_${item.id}`)}
