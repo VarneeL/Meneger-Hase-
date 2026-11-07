@@ -97,7 +97,6 @@ export default function App() {
       <div className="app-container login-container">
         <header className="app-header">
           <div className="header-brand">
-            <div className="logo-badge">🔐</div>
             <div>
               <h1>Menedżer Haseł</h1>
               <p className="subtitle">Wprowadź dane, aby odblokować dostęp</p>
@@ -107,7 +106,7 @@ export default function App() {
 
         <section className="card">
           <h2 className="card-title">Zaloguj się</h2>
-          {authError && <div className="error-banner">⚠️ {authError}</div>}
+          {authError && <div className="error-banner">{authError}</div>}
           <form onSubmit={handleLogin} className="form-grid">
             <div className="input-group">
               <label>Login</label>
@@ -117,7 +116,7 @@ export default function App() {
               <label>Hasło</label>
               <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="Wpisz hasło" required />
             </div>
-            <button type="submit" className="primary-btn">🔓 Zaloguj się</button>
+            <button type="submit" className="primary-btn">Zaloguj się</button>
           </form>
           <div className="login-hint">Domyślny login: <code>admin</code> | Hasło: <code>admin123</code></div>
         </section>
@@ -130,13 +129,12 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="header-brand">
-          <div className="logo-badge">🔐</div>
           <div>
             <h1>Menedżer Haseł</h1>
             <p className="subtitle">Bezpiecznie przechowuj dane logowania w przeglądarce</p>
           </div>
         </div>
-        <button onClick={handleLogout} className="logout-btn">🚪 Wyloguj</button>
+        <button onClick={handleLogout} className="logout-btn">Wyloguj</button>
       </header>
 
       <div className="main-content">
@@ -154,7 +152,7 @@ export default function App() {
             <div className="input-group">
               <div className="label-with-action">
                 <label>Hasło</label>
-                <button type="button" className="text-btn" onClick={generuj}>⚡ Wygeneruj silne</button>
+                <button type="button" className="text-btn" onClick={generuj}>Wygeneruj silne</button>
               </div>
               <div className="input-wrapper">
                 <input
@@ -165,11 +163,11 @@ export default function App() {
                   required
                 />
                 <button type="button" className="icon-btn-inline" onClick={() => setPokazHaslo(!pokazHaslo)}>
-                  {pokazHaslo ? '🙈' : '👁️'}
+                  {pokazHaslo ? 'Ukryj' : 'Pokaż'}
                 </button>
               </div>
             </div>
-            <button type="submit" className="primary-btn">💾 Zapisz hasło</button>
+            <button type="submit" className="primary-btn">Zapisz hasło</button>
           </form>
         </section>
 
@@ -183,7 +181,7 @@ export default function App() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="🔍 Szukaj serwisu lub loginu..."
+                placeholder="Szukaj serwisu lub loginu..."
                 value={szukaj}
                 onChange={e => setSzukaj(e.target.value)}
               />
@@ -193,7 +191,6 @@ export default function App() {
 
           {lista.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">📂</div>
               <h3>Brak zapisanych haseł</h3>
               <p>{szukaj ? 'Brak wyników.' : 'Wypełnij formularz powyżej, aby dodać konto.'}</p>
             </div>
@@ -209,7 +206,7 @@ export default function App() {
                         <span className="date-tag">Dodano: {item.data}</span>
                       </div>
                     </div>
-                    <button onClick={() => handleUsun(item.id)} className="delete-btn">🗑️ Usuń</button>
+                    <button onClick={() => handleUsun(item.id)} className="delete-btn">Usuń</button>
                   </div>
 
                   <div className="entry-details">
@@ -220,7 +217,7 @@ export default function App() {
                         onClick={() => copy(item.login, `l_${item.id}`)}
                         className={`copy-btn ${copiedKey === `l_${item.id}` ? 'copied' : ''}`}
                       >
-                        {copiedKey === `l_${item.id}` ? '✓ Skopiowano' : 'Kopiuj'}
+                        {copiedKey === `l_${item.id}` ? 'Skopiowano' : 'Kopiuj'}
                       </button>
                     </div>
                     <div className="detail-row">
@@ -234,7 +231,7 @@ export default function App() {
                           onClick={() => copy(item.haslo, `p_${item.id}`)}
                           className={`copy-btn ${copiedKey === `p_${item.id}` ? 'copied' : ''}`}
                         >
-                          {copiedKey === `p_${item.id}` ? '✓ Skopiowano' : 'Kopiuj'}
+                          {copiedKey === `p_${item.id}` ? 'Skopiowano' : 'Kopiuj'}
                         </button>
                       </div>
                     </div>

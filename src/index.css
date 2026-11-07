@@ -228,19 +228,20 @@ input:focus {
 
 .icon-btn-inline {
   position: absolute;
-  right: 0.75rem;
+  right: 0.65rem;
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0.2rem 0.4rem;
   border-radius: var(--radius-sm);
-  opacity: 0.8;
   transition: var(--transition);
 }
 
 .icon-btn-inline:hover {
-  opacity: 1;
+  color: var(--text-main);
 }
 
 .primary-btn {
